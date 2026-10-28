@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crazy Fun Zone</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: radial-gradient( circle at top, #302060, #090d1f 65%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 650px;
+            text-align: center;
+            padding: 40px 25px;
+            border: 1px solid #5541a5;
+            border-radius: 25px;
+            background: rgba(20, 20, 50, 0.85);
+            box-shadow: 0 0 40px #6938ef40;
+        }
+        
+        .emoji {
+            font-size: 75px;
+            animation: float 2s ease-in-out infinite;
+        }
+        
+        h1 {
+            margin: 20px 0 12px;
+            font-size: clamp(30px, 7vw, 48px);
+            background: linear-gradient( 90deg, #a78bfa, #67e8f9, #f0abfc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        p {
+            color: #c4c8e8;
+            line-height: 1.7;
+        }
+        
+        .card {
+            margin: 28px 0;
+            padding: 24px 15px;
+            border-radius: 16px;
+            background: #ffffff0c;
+            border: 1px solid #ffffff18;
+        }
+        
+        #message {
+            font-size: 19px;
+            color: #e9d5ff;
+            margin-top: 12px;
+        }
+        
+        button {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #7c3aed, #0891b2);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+        
+        button:hover {
+            transform: translateY(-3px) scale(1.04);
+            box-shadow: 0 8px 25px #7c3aed66;
+        }
+        
+        .footer {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #9298bd;
+        }
+        
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-12px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <div class="emoji">👽</div>
+
+        <h1>CRAZY FUN ZONE</h1>
+
+        <p>Welcome, legend! Teri entry ho chuki hai.</p>
+        <p>Ab thodi masti ho jaaye! 😎</p>
+
+        <section class="card">
+            <h2>😂 Mood Booster</h2>
+            <p id="message">
+                Button daba bhai, surprise tera wait kar raha hai!
+            </p>
+        </section>
+
+        <button onclick="showFun()">SURPRISE ME! 🚀</button>
+
+        <p class="footer">
+            Powered by HTML, CSS, JavaScript & your Flask app 💜
+        </p>
+    </main>
+
+    <script>
+        const messages = [
+            "Bhai tera confidence dekh ke bugs bhi resign kar dein! 😂",
+            "Python bole: mujhe kyun toda? 🐍",
+            "Error aaye toh tension nahi, debugger zindabad! 💻",
+            "Ek din tu bhi bolega: It works on my machine! 😎",
+            "Chai pi, code likh, duniya hila de! ☕",
+            "404: Teri tension not found! 🤣",
+            "Bhai tu developer hai, magician nahi... par kabhi-kabhi dono! 🪄",
+            "Flask chhota hai, tere dreams nahi! 🚀"
+        ];
+
+        function showFun() {
+            const message = document.getElementById("message");
+            const randomIndex = Math.floor(
+                Math.random() * messages.length
+            );
+
+            message.textContent = messages[randomIndex];
+        }
+    </script>
+</body>
+
+</html>

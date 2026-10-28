@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Catcher 🎮</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 16px;
+            font-family: Arial, sans-serif;
+            color: white;
+            background: radial-gradient(circle at top, #29205c, #080b19 75%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .game {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin: 5px 0;
+            color: #a78bfa;
+            font-size: clamp(28px, 7vw, 38px);
+        }
+        
+        .subtitle {
+            color: #bfc5e9;
+            margin: 8px 0 18px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .stat {
+            flex: 1;
+            padding: 12px 5px;
+            background: #ffffff12;
+            border: 1px solid #ffffff20;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        
+        canvas {
+            width: 100%;
+            display: block;
+            border: 2px solid #7663e8;
+            border-radius: 18px;
+            background: #10172f;
+            box-shadow: 0 0 30px #7c3aed35;
+            touch-action: none;
+        }
+        
+        button {
+            border: 0;
+            border-radius: 12px;
+            padding: 13px 18px;
+            color: white;
+            background: linear-gradient(120deg, #7c3aed, #2563eb);
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        
+        button:active {
+            transform: scale(.96);
+        }
+        
+        .start {
+            width: 100%;
+            margin-top: 14px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 14px;
+            margin-top: 12px;
+        }
+        
+        .controls button {
+            flex: 1;
+            font-size: 24px;
+            padding: 12px;
+            background: #ffffff16;
+            border: 1px solid #ffffff30;
+            user-select: none;
+        }
+        
+        .help {
+            color: #aab1d5;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-top: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game">
+
+        <h1>🎮 EMOJI CATCHER</h1>
+        <p class="subtitle">Catch the goodies. Don't miss them! 😎</p>
+
+        <div class="stats">
+            <div class="stat">⭐ Score: <span id="score">0</span></div>
+            <div class="stat">❤️ Lives: <span id="lives">3</span></div>
+            <div class="stat">🏆 Best: <span id="best">0</span></div>
+        </div>
+
+        <canvas id="gameCanvas" width="420" height="520"></canvas>
+
+        <button class="start" id="startBtn">🚀 START GAME</button>
+
+        <div class="controls">
+            <button id="leftBtn" aria-label="Move left">⬅️</button>
+            <button id="rightBtn" aria-label="Move right">➡️</button>
+        </div>
+
+        <p class="help">
+            💻 Keyboard: ← → or A / D<br> 📱 Mobile: Use the buttons above<br> ⭐ Catch falling emojis and try to beat your best score!
+        </p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const scoreEl = document.getElementById("score");
+        const livesEl = document.getElementById("lives");
+        const bestEl = document.getElementById("best");
+        const startBtn = document.getElementById("startBtn");
+
+        let score = 0;
+        let lives = 3;
+        let best = 0;
+        let running = false;
+        let player;
+        let items = [];
+        let particles = [];
+        let spawnTimer = 0;
+        let lastTime = 0;
+        let animationId = null;
+        let left = false;
+        let right = false;
+        let message = "Ready to play?";
+
+        try {
+            best = Number(localStorage.getItem("emojiBest")) || 0;
+        } catch (e) {}
+
+        bestEl.textContent = best;
+
+        const goodies = ["⭐", "💎", "🍕", "🍩", "🍓", "🪙"];
+
+        function resetGame() {
+            score = 0;
+            lives = 3;
+            items = [];
+            particles = [];
+            spawnTimer = 0;
+            lastTime = 0;
+
+            player = {
+                x: canvas.width / 2 - 35,
+                y: canvas.height - 65,
+                width: 70,
+                height: 45,
+                speed: 330
+            };
+
+            scoreEl.textContent = score;
+            livesEl.textContent = lives;
+        }
+
+        function drawBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, "#18234b");
+            gradient.addColorStop(1, "#101126");
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Decorative stars
+            ctx.fillStyle = "#ffffff55";
+            for (let i = 0; i < 35; i++) {
+                const x = (i * 97 + 31) % canvas.width;
+                const y = (i * 67 + 19) % canvas.height;
+                ctx.fillRect(x, y, 2, 2);
+            }
+        }
+
+        function drawPlayer() {
+            ctx.font = "48px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(
+                "🧺",
+                player.x + player.width / 2,
+                player.y + player.height / 2
+            );
+        }
+
+        function drawItems() {
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            for (const item of items) {
+                ctx.font = "30px Arial";
+                ctx.fillText(item.emoji, item.x, item.y);
+            }
+        }
+
+        function drawParticles() {
+            for (const p of particles) {
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.font = "20px Arial";
+                ctx.fillText(p.emoji, p.x, p.y);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function drawOverlay(title, subtitle) {
+            ctx.fillStyle = "#070b1bd9";
+            ctx.fillRect(20, 175, canvas.width - 40, 155);
+
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            ctx.fillStyle = "#c4b5fd";
+            ctx.font = "bold 27px Arial";
+            ctx.fillText(title, canvas.width / 2, 220);
+
+            ctx.fillStyle = "white";
+            ctx.font = "15px Arial";
+            ctx.fillText(subtitle, canvas.width / 2, 263);
+        }
+
+        function render() {
+            drawBackground();
+
+            if (player) drawPlayer();
+
+            drawItems();
+            drawParticles();
+
+            if (!running) {
+                drawOverlay(
+                    message,
+                    score > 0 ? `Your score: ${score}` : "Press START GAME to begin!"
+                );
+            }
+        }
+
+        function spawnItem() {
+            items.push({
+                x: 20 + Math.random() * (canvas.width - 40),
+                y: -20,
+                speed: 130 + Math.random() * 80 + score * 3,
+                emoji: goodies[Math.floor(Math.random() * goodies.length)]
+            });
+        }
+
+        function burst(x, y) {
+            for (let i = 0; i < 6; i++) {
+                particles.push({
+                    x: x + (Math.random() - 0.5) * 35,
+                    y: y + (Math.random() - 0.5) * 20,
+                    emoji: "✨",
+                    life: 1
+                });
+            }
+        }
+
+        function update(dt) {
+            if (left) player.x -= player.speed * dt;
+            if (right) player.x += player.speed * dt;
+
+            player.x = Math.max(
+                0,
+                Math.min(canvas.width - player.width, player.x)
+            );
+
+            spawnTimer += dt;
+
+            const spawnInterval = Math.max(0.32, 0.85 - score * 0.008);
+
+            if (spawnTimer >= spawnInterval) {
+                spawnTimer = 0;
+                spawnItem();
+            }
+
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                item.y += item.speed * dt;
+
+                const caught =
+                    item.y + 13 >= player.y &&
+                    item.y - 13 <= player.y + player.height &&
+                    item.x >= player.x &&
+                    item.x <= player.x + player.width;
+
+                if (caught) {
+                    score++;
+                    scoreEl.textContent = score;
+                    burst(item.x, item.y);
+                    items.splice(i, 1);
+                    continue;
+                }
+
+                if (item.y > canvas.height + 20) {
+                    items.splice(i, 1);
+                    lives--;
+                    livesEl.textContent = lives;
+
+                    if (lives <= 0) {
+                        endGame();
+                        return;
+                    }
+                }
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].life -= dt * 1.8;
+                particles[i].y -= 35 * dt;
+
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function gameLoop(timestamp) {
+            if (!running) return;
+
+            if (!lastTime) lastTime = timestamp;
+
+            // Prevent large jumps if the browser tab pauses
+            const dt = Math.min((timestamp - lastTime) / 1000, 0.04);
+            lastTime = timestamp;
+
+            update(dt);
+            render();
+
+            if (running) {
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function startGame() {
+            if (animationId !== null) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            resetGame();
+            message = "Ready to play?";
+            running = true;
+            startBtn.textContent = "🔄 RESTART GAME";
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            running = false;
+            left = false;
+            right = false;
+
+            if (score > best) {
+                best = score;
+                bestEl.textContent = best;
+
+                try {
+                    localStorage.setItem("emojiBest", String(best));
+                } catch (e) {}
+            }
+
+            message = "GAME OVER! 😵";
+            startBtn.textContent = "🔁 PLAY AGAIN";
+            render();
+        }
+
+        function setKey(key, value) {
+            if (key === "ArrowLeft" || key.toLowerCase() === "a") {
+                left = value;
+            }
+
+            if (key === "ArrowRight" || key.toLowerCase() === "d") {
+                right = value;
+            }
+        }
+
+        document.addEventListener("keydown", event => {
+            if (["ArrowLeft", "ArrowRight", " "].includes(event.key)) {
+                event.preventDefault();
+            }
+
+            setKey(event.key, true);
+        });
+
+        document.addEventListener("keyup", event => {
+            setKey(event.key, false);
+        });
+
+        window.addEventListener("blur", () => {
+            left = false;
+            right = false;
+        });
+
+        function bindButton(id, direction) {
+            const btn = document.getElementById(id);
+
+            btn.addEventListener("pointerdown", event => {
+                event.preventDefault();
+                if (direction === "left") left = true;
+                if (direction === "right") right = true;
+            });
+
+            for (const type of["pointerup", "pointercancel", "pointerleave"]) {
+                btn.addEventListener(type, () => {
+                    if (direction === "left") left = false;
+                    if (direction === "right") right = false;
+                });
+            }
+        }
+
+        bindButton("leftBtn", "left");
+        bindButton("rightBtn", "right");
+
+        startBtn.addEventListener("click", startGame);
+
+        resetGame();
+        render();
+    </script>
+</body>
+
+</html>
