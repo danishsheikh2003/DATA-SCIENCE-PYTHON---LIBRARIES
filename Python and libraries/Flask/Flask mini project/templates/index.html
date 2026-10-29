@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1020">
+    <title>NovaCalc | Smart Calculator</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="background-glow glow-one"></div>
+    <div class="background-glow glow-two"></div>
+
+    <main class="page-wrapper">
+        <header class="topbar">
+            <a class="brand" href="/">
+                <span class="brand-icon">N</span>
+                <span>Nova<span class="brand-accent">Calc</span></span>
+            </a>
+
+            <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch theme">
+                <span id="themeIcon">☀️</span>
+            </button>
+        </header>
+
+        <section class="hero">
+            <span class="eyebrow">
+                <span class="status-dot"></span> YOUR PERSONAL CALCULATOR
+            </span>
+
+            <h1>Numbers made <span>beautiful.</span></h1>
+            <p>Simple calculations. A smarter experience.</p>
+        </section>
+
+        <section class="calculator-card">
+            <div class="card-heading">
+                <div>
+                    <span class="small-label">CALCULATOR</span>
+                    <h2>Let's calculate</h2>
+                </div>
+                <span class="calculator-icon">⌗</span>
+            </div>
+
+            <form method="POST" id="calculatorForm">
+                <div class="input-group">
+                    <label for="num1">First number</label>
+                    <input type="number" step="any" id="num1" name="num1" placeholder="e.g. 125" value="{{ request.form.get('num1', '') }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="num2">Second number</label>
+                    <input type="number" step="any" id="num2" name="num2" placeholder="e.g. 25" value="{{ request.form.get('num2', '') }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="operation">Choose operation</label>
+                    <select id="operation" name="operation" required>
+                        <option value="add"
+                            {% if request.form.get('operation') == 'add' %}selected{% endif %}>
+                            + &nbsp; Addition
+                        </option>
+                        <option value="subtract"
+                            {% if request.form.get('operation') == 'subtract' %}selected{% endif %}>
+                            − &nbsp; Subtraction
+                        </option>
+                        <option value="multiply"
+                            {% if request.form.get('operation') == 'multiply' %}selected{% endif %}>
+                            × &nbsp; Multiplication
+                        </option>
+                        <option value="divide"
+                            {% if request.form.get('operation') == 'divide' %}selected{% endif %}>
+                            ÷ &nbsp; Division
+                        </option>
+                    </select>
+                </div>
+
+                <button type="submit" class="calculate-btn">
+                    <span>Calculate now</span>
+                    <span class="btn-arrow">↗</span>
+                </button>
+            </form>
+
+            {% if result is not none %}
+            <div class="result-box" aria-live="polite">
+                <span class="result-label">YOUR RESULT</span>
+                <div class="result-value">{{ result }}</div>
+                <span class="result-caption">Calculation completed successfully</span>
+            </div>
+            {% endif %} {% if error %}
+            <div class="error-box" role="alert">
+                ⚠️ {{ error }}
+            </div>
+            {% endif %}
+
+            <div class="card-footer">
+                <span>✦</span> Designed for everyday calculations
+            </div>
+        </section>
+
+        <footer class="page-footer">
+            <p>Made with <span>♥</span> using Flask</p>
+        </footer>
+    </main>
+
+    <script>
+        const root = document.documentElement;
+        const toggle = document.getElementById("themeToggle");
+        const icon = document.getElementById("themeIcon");
+
+        function applyTheme(theme) {
+            root.dataset.theme = theme;
+            icon.textContent = theme === "dark" ? "☀️" : "🌙";
+            toggle.setAttribute(
+                "aria-label",
+                theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            );
+        }
+
+        let savedTheme = "dark";
+
+        try {
+            savedTheme = localStorage.getItem("novacalc-theme") || "dark";
+        } catch (error) {
+            // Keep dark mode if browser storage is unavailable.
+        }
+
+        applyTheme(savedTheme);
+
+        toggle.addEventListener("click", function() {
+            const nextTheme =
+                root.dataset.theme === "dark" ? "light" : "dark";
+
+            applyTheme(nextTheme);
+
+            try {
+                localStorage.setItem("novacalc-theme", nextTheme);
+            } catch (error) {
+                // Theme still works for this page.
+            }
+        });
+    </script>
+</body>
+
+</html>
