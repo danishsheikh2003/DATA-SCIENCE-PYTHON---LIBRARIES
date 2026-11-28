@@ -1,0 +1,3 @@
+Name:Danish
+Salary: 25000
+City: Nagpur

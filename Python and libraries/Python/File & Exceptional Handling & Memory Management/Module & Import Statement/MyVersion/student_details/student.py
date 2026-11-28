@@ -15,5 +15,3 @@ class Student:
     def Divition(self):
         return self.__Number1 / self.__Number2
 
-
-        
